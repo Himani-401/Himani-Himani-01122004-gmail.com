@@ -2,12 +2,12 @@
 // Idempotent: drops and recreates app.db.  Run: npm run db:reset
 
 import { readFileSync, rmSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { openDatabase, newId } from '../server/db.js';
 import { hashPassword } from '../server/auth.js';
-import { readNonce, buildOverlay, applyOverlay, describeOverlay } from './personalise.js';
 
 const DB_FILE = process.env.DATABASE_FILE ?? 'app.db';
-const here = (p) => new URL(p, import.meta.url).pathname;
+const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 
 for (const suffix of ['', '-wal', '-shm']) {
   if (existsSync(DB_FILE + suffix)) rmSync(DB_FILE + suffix);
@@ -85,13 +85,6 @@ const load = db.transaction(() => {
 });
 load();
 
-// --- per-candidate overlay ---------------------------------------------
-// ADDITIVE: it adds one organization and never touches the documented two, so the
-// shipped public suites stay calibrated with or without it. No nonce -> no overlay,
-// which reproduces the documented fixture exactly.
-const overlay = buildOverlay(readNonce());
-if (overlay) applyOverlay(db, overlay, { passwordHash: hashPassword });
-
 const counts = ['organizations', 'users', 'memberships', 'devices', 'grants', 'sessions', 'audit_events']
   .map((t) => `${t}=${db.prepare(`SELECT count(*) AS n FROM ${t}`).get().n}`)
   .join('  ');
@@ -100,7 +93,5 @@ console.log(`seeded ${DB_FILE}\n  ${counts}`);
 console.log(`  permissions=${db.prepare('SELECT count(*) AS n FROM permissions').get().n}  patterns=${db.prepare('SELECT count(*) AS n FROM permission_patterns').get().n}`);
 console.log(`\n  login as dana@example.test / ${seed.seedPassword}  (owner in Acme, viewer in Globex)`);
 console.log(`  login as sam@example.test  / ${seed.seedPassword}  (operator in Acme, auditor in Globex)`);
-
-if (overlay) console.log(describeOverlay(overlay));
 
 db.close();

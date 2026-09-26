@@ -19,7 +19,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 
   webServer: {
-    command: 'node scripts/load-db.js && node server/index.js',
+    command: 'node -e "for (const f of [\'e2e.db\',\'e2e.db-wal\',\'e2e.db-shm\']) { try { require(\'node:fs\').rmSync(f, { force: true }); } catch {} }" && node scripts/load-db.js && node server/index.js',
     url: `http://localhost:${PORT}/v1/auth/me`,
     reuseExistingServer: false,
     timeout: 30_000,
