@@ -23,15 +23,6 @@ const server = spawn(process.execPath, ['server/index.js'], {
 
 await new Promise((r) => setTimeout(r, 1200));
 
-// Abort cleanly: if a check below throws (an unimplemented API returns a body with no
-// fields on it), take the server down with us instead of leaving it holding the port.
-for (const event of ['uncaughtException', 'unhandledRejection']) {
-  process.on(event, (err) => {
-    console.error(`\n  aborted: ${err?.message ?? err}`);
-    server.kill();
-    process.exit(1);
-  });
-}
 let pass = 0, fail = 0;
 const check = (label, actual, expected) => {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);

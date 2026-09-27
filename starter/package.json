@@ -11,7 +11,8 @@
     "db:reset": "node -e \"for (const f of ['app.db','app.db-wal','app.db-shm']) { try { require('node:fs').rmSync(f, { force: true }); } catch {} }\" && npm run db:load",
     "db:load": "node scripts/load-db.js",
     "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "pretest": "npm run build"
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0"
